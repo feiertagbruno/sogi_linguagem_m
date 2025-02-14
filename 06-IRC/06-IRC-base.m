@@ -124,11 +124,8 @@ let
                 // cria o indice dos defeitos em ordem
                 tb_index_mes = Table.AddIndexColumn((
                     Table.Sort((
-                        Table.AddColumn(
                             Table.Group(tb_familia,"Defeito Constatado",{"quant", each List.Sum([quant]), type number})
-                            , "prioridade", each if [Defeito Constatado] = "Z | OUTROS" then 1 else 0, Int8.Type
-                        )
-                    ),{{"prioridade", Order.Ascending},{"quant",Order.Descending},{"Defeito Constatado", Order.Ascending}})
+                    ),{{"quant",Order.Descending},{"Defeito Constatado", Order.Ascending}})
                 ),"index_mes_pareto",1,1,Int32.Type),
                 // cria o pareto
                 pareto = Table.AddColumn(tb_index_mes,"pareto", each (
