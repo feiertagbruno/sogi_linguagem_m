@@ -1,0 +1,19 @@
+{
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[powerquery]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "files.associations": {
+        "*.m": "powerquery"
+    },
+    "editor.formatOnSave": true,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    },
+    "editor.tabSize": 4,
+    "editor.insertSpaces": false,
+    "editor.wordBasedSuggestions": false
+}
