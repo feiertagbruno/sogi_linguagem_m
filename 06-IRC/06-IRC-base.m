@@ -73,8 +73,9 @@ let
                 if List.AnyTrue(List.Transform( {"RESISTÊNCIA", "RESISTENCIA"}, (p) => Text.Contains(Text.Upper(_),p) )) then "RESISTÊNCIA" else
                 if Text.Contains( Text.Upper(_), "PLACA" ) then "PLACA DEFEITUOSA" else
                 if Text.Contains( Text.Upper(_), "PATIM" ) then "PATIN" else
-                if List.AnyTrue( List.Transform({"CABO", "CAIXA DE CONTATO"}, (p) => Text.Contains( Text.Upper(_),p ) )) then "CABO | CAIXA DE CONTATO" else
-				if Text.Contains( Text.Upper(_), "CHAVE") then "CHAVE" else
+                if List.AnyTrue( List.Transform({"CAIXA DE CONTATO"}, (p) => Text.Contains( Text.Upper(_),p ) )) then "CAIXA DE CONTATO" else
+                if List.AnyTrue( List.Transform({"CABO"}, (p) => Text.Contains( Text.Upper(_),p ) )) then "CABO" else
+								if Text.Contains( Text.Upper(_), "CHAVE") then "CHAVE" else
                 if List.AnyTrue( List.Transform({"HELICE","HÉLICE"}, (p) => Text.Contains(Text.Upper(_), p) )) then "HÉLICE" else
                 if Text.Contains(Text.Upper(_), "MOTOR") then "MOTOR" else "Z | OUTROS"
         }
@@ -157,9 +158,12 @@ let
         {"mes_texto",type text},{"quartil_texto",type text},{"relação",type text},
         {"relacao_defeito",type text},{"em_linha", type text},{"pareto", type number},
         {"index_mes_pareto",type text}
-    })
+    }),
     //////////////////////////////////// fim TRAZER PARETO
+		filtro_ultimo_mes = Table.AddColumn(alterar_tipos,"filtro_ultimo_mes", each (
+			if [mes_num] = List.Max(Table.Column(alterar_tipos,"mes_num")) then "Último Mês" else "Meses Anteriores"
+		), type text)
 
 
 in
-    alterar_tipos
+    filtro_ultimo_mes
