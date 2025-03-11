@@ -7,19 +7,18 @@ let
         each ([Obsoletos] <> 0 and [Obsoletos] <> "") or ([Excessos] <> 0 and [Excessos] <> "")
     ),
 
-    combina_fontes = Table.Buffer(Table.Combine({filtra_linhas_zeradas_ano_atual, #"16-exob-base-ano-anterior"})),
+    combina_fontes = Table.Combine({filtra_linhas_zeradas_ano_atual, #"16-exob-base-ano-anterior"}),
 
     filtra_PA_e_PI = 
-    // Table.RemoveColumns((
         Table.SelectRows((
             Table.ExpandTableColumn(
                 Table.NestedJoin(combina_fontes,"Código",#"97-SB1","codigo","dados",JoinKind.LeftOuter)
                 ,"dados",{"tipo"}
             )
         ), each not List.Contains({"PA","PI"},[tipo])),
-    // ),"tipo"),
+    filtra_PA_e_PI_buffered = Table.Buffer(filtra_PA_e_PI),
 
-    semana_num = Table.AddColumn(filtra_PA_e_PI, "semana_num", each [Ano] * 100 + [Semana], Int32.Type),
+    semana_num = Table.AddColumn(filtra_PA_e_PI_buffered, "semana_num", each [Ano] * 100 + [Semana], Int32.Type),
     ano_num = Table.RenameColumns(semana_num,{{"Ano", "ano_num"}}),
     mes_num = Table.AddColumn(ano_num, "mes_num", 
         each [ano_num] * 100 + #"coleta_mes_pela_semana"([Semana]), Int32.Type
@@ -79,7 +78,9 @@ let
     filtro_mes = Table.AddColumn(traz_index_mes,"filtro_mes", 
         each if [mes_texto] = null then null else
         if [index_mes] <= 3 then "Últimos 3 Meses" else "Meses Anteriores", type text
-     ),
+    ),
+    
+    filtro_mes_buffered = Table.Buffer(filtro_mes),
 
     ////////////////////////////////////////
     // trazer ordem maiores obsoletos e excessos
@@ -93,7 +94,7 @@ let
     // 7 fazer isso para os dois e expandir a tabela
 
     // 1
-    group_por_semana = Table.Group(filtro_mes, "semana_num", {"agrupamento", each _, type table}),
+    group_por_semana = Table.Group(filtro_mes_buffered, "semana_num", {"agrupamento", each _, type table}),
 
     processamentos_semana = Table.TransformColumns(group_por_semana, {"agrupamento", (tb_semana) => (
         let
