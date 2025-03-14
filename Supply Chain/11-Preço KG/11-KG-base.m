@@ -6,7 +6,8 @@ let
     filtra_ano_atual_e_anterior = Table.SelectRows(#"Erros Removidos",each Date.Year([Mês de Entrada]) >= #"00-ano-atual" - 1 ),
 
     seleciona_colunas = Table.SelectColumns(filtra_ano_atual_e_anterior,
-        {"Reference","ITEM","Forwarder","Modalidade ","Gross Weight","FOB (BRL) AMOUNT","FRETE INTERN. (BRL)","Mês de Entrada"}),
+        {"Reference","ITEM","Description","Forwarder","Modalidade ","Gross Weight",
+            "FOB (BRL) AMOUNT","FRETE INTERN. (BRL)","Mês de Entrada"}),
     
     renomeia_colunas = Table.RenameColumns(seleciona_colunas,{
         {"FOB (BRL) AMOUNT","FOB AMOUNT (BRL)"},
@@ -85,6 +86,7 @@ let
         Date.MonthName([Data Real de Entrega]) & "/" & Text.Middle([ano_texto],2,2) 
     ), type text),
 
+    // FILTRO ÚLTIMAS 6 SEMANAS
     semanas_distintas = Table.Sort(
         Table.Distinct(Table.SelectColumns(mes_texto,"semana_num")),
         {"semana_num",Order.Descending}
@@ -97,7 +99,26 @@ let
     traz_indice = Table.ExpandTableColumn(
         Table.NestedJoin(mes_texto,{"semana_num"},filtro_semana,{"semana_num"},"dados",JoinKind.LeftOuter)
     , "dados",{"filtro_semana"}
+    ),
+
+    // FILTRO ÚLTIMOS 3 MESES
+    meses_distintos = Table.Sort(
+        Table.Distinct(Table.SelectColumns(traz_indice,"mes_num")),
+        {"mes_num",Order.Descending}
+    ),
+    index_mes = Table.AddIndexColumn(meses_distintos,"filtro_mes",1,1,Int16.Type),
+    filtro_mes = Table.TransformColumns(index_mes,{
+        {"filtro_mes", each if _ <= 3 then "Últimos 3 Meses" else "Meses Anteriores", type text}
+    }),
+    traz_filtro_mes = Table.ExpandTableColumn(
+        Table.NestedJoin(traz_indice,"mes_num",filtro_mes,"mes_num","dados", JoinKind.LeftOuter)
+        ,"dados",{"filtro_mes"}
+    ),
+
+    cores_agentes_de_carga = Table.ExpandTableColumn(
+        Table.NestedJoin(traz_filtro_mes,"AGENTE DE CARGAS",#"11-KG-cores-ag-cargas","AGENTE DE CARGAS","dados",JoinKind.LeftOuter)
+        ,"dados",{"Cor"}
     )
 
 in
-    traz_indice
+    cores_agentes_de_carga

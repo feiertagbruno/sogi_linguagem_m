@@ -1,5 +1,9 @@
 {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 4
+    ,
+    "editor.insertSpaces": false,
+    "editor.wordBasedSuggestions": false,
     "[powerquery]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
@@ -12,8 +16,5 @@
         "other": true,
         "comments": false,
         "strings": true
-    },
-    "editor.tabSize": 4,
-    "editor.insertSpaces": false,
-    "editor.wordBasedSuggestions": false
+    }
 }
