@@ -60,7 +60,8 @@ let
         ,{"semana_num",Order.Descending}
     ),
     index_semana = Table.AddIndexColumn(semanas_distintas,"filtro_semana",1,1,Int16.Type),
-    filtro_semana = Table.TransformColumns(index_semana,{
+    index_semana_buffer = Table.Buffer(index_semana),
+    filtro_semana = Table.TransformColumns(index_semana_buffer,{
         {"filtro_semana", each if _ <= 6 then "Últimas 6 Semanas" else "Semanas Anteriores", type text}
     }),
     traz_filtro_semana = Table.ExpandTableColumn(
@@ -101,7 +102,46 @@ let
     traz_cor = Table.ExpandTableColumn(
         Table.NestedJoin(arruma_ano_num,"ARMAZEM",cor_armazem,"ARMAZEM","dados",JoinKind.LeftOuter)
         ,"dados",{"Cor"}
-    )
+    ),
+
+    traz_index_semana = Table.ExpandTableColumn(
+        Table.NestedJoin(traz_cor,"semana_num",index_semana_buffer,"semana_num","dados",JoinKind.LeftOuter)
+        ,"dados",{"filtro_semana"},{"index_semana"}
+    ),
+
+    buffer_2 = Table.Buffer(traz_index_semana),
+
+    // AGRESSORES
+    // tabela temporária para trazer semana anterior
+    semana_menos_1 = Table.TransformColumns(buffer_2,{
+        {"index_semana", each _ - 1, Int16.Type}
+    }),
+    traz_semana_anterior = Table.ExpandTableColumn(
+        Table.NestedJoin(buffer_2,{"index_semana","CODIGO","ARMAZEM"},semana_menos_1,{"index_semana","CODIGO","ARMAZEM"},
+        "dados",JoinKind.LeftOuter)
+        ,"dados",{"total"},{"total_semana_ant"}
+    ),
+    subst_nulos_por_zero = Table.TransformColumns(traz_semana_anterior,{
+        {"total_semana_ant", each Replacer.ReplaceValue(_,null,0), type number}
+    }),
+    add_diferenca = Table.AddColumn(subst_nulos_por_zero,"diferenca",each (
+        [total_semana_ant] - [total]
+    ) , type number),
+
+    colunas_necessarias = Table.SelectColumns(add_diferenca,{
+        "CODIGO","ARMAZEM","QUANT","tipo","categoria","ano_num","ano_texto","semana_num","semana_texto",
+        "mes_num","mes_texto","total","total_semana_ant","diferenca","filtro_semana","filtro_mes","Cor"
+    }),
+
+    tipos_colunas = Table.TransformColumnTypes(colunas_necessarias,{
+        {"CODIGO", type text}, {"ARMAZEM",type text}, {"QUANT", type number},
+        {"tipo",type text}, {"categoria", type text}, {"semana_num", Int32.Type},
+        {"semana_texto", type text}, {"mes_num", Int32.Type}, {"mes_texto", type text}
+    }),
+
+    filtro_ult_semana = Table.AddColumn(tipos_colunas,"filtro_ult_semana", each (
+        if [semana_num] = maior_semana then "Última Semana" else "Semanas Anteriores"
+    ), type text)
 
 in
-    traz_cor
+    filtro_ult_semana
