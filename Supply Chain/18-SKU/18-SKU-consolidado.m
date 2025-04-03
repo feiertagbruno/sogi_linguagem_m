@@ -1,8 +1,10 @@
 let
     Fonte = Excel.Workbook(File.Contents("M:\SOGI\2025\BI-SOGI\Bases\Custo dos SKUs\Multi Estruturas Sem Frete.xlsx"), null, true),
     tabela_consolidada_Table = Fonte{[Item="tabela_consolidada",Kind="Table"]}[Data],
+
+	tipo_data = Table.TransformColumnTypes(tabela_consolidada_Table,{{"Data de Referência", type date}}),
 	
-	ano_num = Table.AddColumn(tabela_consolidada_Table, "ano_num", each (
+	ano_num = Table.AddColumn(tipo_data, "ano_num", each (
 		Date.Year([Data de Referência])
 	), Int16.Type),
 	
@@ -53,7 +55,7 @@ let
 
 	filtro_categoria = Table.AddColumn(semana_texto,"filtro_categoria", each (
 		if [semana_num] = menor_semana then "Standard" else
-		if [semana_num] = maior_semana then "Última Semana" else "Semanas Anteriores"
+		if [semana_num] = maior_semana then "Último Mês" else "Mês Anterior"
 	) , type text),
 
 	colunas_necessarias = Table.SelectColumns(filtro_categoria,{

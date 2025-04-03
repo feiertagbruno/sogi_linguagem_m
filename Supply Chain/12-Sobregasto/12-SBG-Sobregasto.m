@@ -1,18 +1,15 @@
 let
     Fonte = #"11-KG-base",
 
-    group_por_processo = Table.Group(Fonte,{"REFERENCE","AGENTE DE CARGAS","MODAL","Data Real de Entrega"},{
+    group_por_processo = Table.Group(Fonte,{"REFERENCE","AGENTE DE CARGAS","MODAL","MODAL ORIGINAL","Data Real de Entrega","tipo"},{
         {"FOB AMOUNT (BRL)", each List.Sum([#"FOB AMOUNT (BRL)"]), type number},
         {"FRETE INTERN. (BRL)", each List.Sum([#"FRETE INTERN. (BRL)"]), type number}
     }),
 
     semana_num = Table.AddColumn(group_por_processo, "semana_num", each Date.Year([Data Real de Entrega]) * 100 + Date.WeekOfYear([Data Real de Entrega]), Int32.Type),
 
-    #"Linhas Filtradas" = Table.SelectRows(semana_num, each ([AGENTE DE CARGAS] <> "DHL")),
 
-
-
-    ano_num = Table.AddColumn(#"Linhas Filtradas", "ano_num", each Date.Year([Data Real de Entrega]), Int32.Type ),
+    ano_num = Table.AddColumn(semana_num, "ano_num", each Date.Year([Data Real de Entrega]), Int32.Type ),
 
     traz_cor_ag_carga = Table.ExpandTableColumn(
         Table.NestedJoin(ano_num,{"AGENTE DE CARGAS"},#"11-KG-cores-ag-cargas",{"AGENTE DE CARGAS"},"dados",JoinKind.FullOuter)
@@ -24,9 +21,7 @@ let
         each [ano_texto] & "-" & Text.From([semana_num]) & "-" & [AGENTE DE CARGAS] & "-" & [MODAL]
     , type text ),
 
-    #"Linhas Filtradas1" = Table.SelectRows(relacao, each ([ano_num] <> null)),
-
-    porcent_ideal = Table.AddColumn(#"Linhas Filtradas1","porcent_ideal", each 0.3, type number),
+    porcent_ideal = Table.AddColumn(relacao,"porcent_ideal", each 0.3, type number),
 
     frete_ideal = Table.AddColumn(porcent_ideal, "frete_ideal",each [#"FOB AMOUNT (BRL)"] * [porcent_ideal], type number),
 
@@ -57,7 +52,7 @@ let
     ),
 
     semana_texto = Table.AddColumn(forma_filtro_pelo_indice,"semana_texto", 
-        each "WK" & Text.Middle(Text.From([semana_num]),4,2) & "/" & Text.Middle([ano_texto],2,2)
+        each "W" & Text.Middle(Text.From([semana_num]),4,2) & "/" & Text.Middle([ano_texto],2,2)
     , type text),
 
     coleta_semana = (semana) => (
@@ -104,7 +99,14 @@ let
     mes_texto = Table.AddColumn(forma_filtro_pelo_indice_m, "mes_texto",
         each Text.Start( Date.MonthName( #date(#"00-ano-atual",Number.FromText(Text.Middle(Text.From([mes_num]),4,2)),1) ) ,3) & "/" & Text.Middle([ano_texto],2,2)
     , type text),
-    #"Outras Colunas Removidas" = Table.SelectColumns(mes_texto,{"REFERENCE","AGENTE DE CARGAS", "MODAL", "FOB AMOUNT (BRL)", "FRETE INTERN. (BRL)","semana_num", "ano_num", "Cor", "ano_texto", "relacao", "sobrecarga", "filtro_6_semanas", "semana_texto", "mes_num", "filtro_3_meses", "mes_texto"}),
+    #"Outras Colunas Removidas" = Table.SelectColumns(mes_texto,{
+        "REFERENCE","AGENTE DE CARGAS", "MODAL", "MODAL ORIGINAL",
+        "FOB AMOUNT (BRL)", "FRETE INTERN. (BRL)","semana_num", 
+        "ano_num", "Cor", "ano_texto", 
+        "relacao", "sobrecarga", "filtro_6_semanas", 
+        "semana_texto", "mes_num", "filtro_3_meses", 
+        "mes_texto", "tipo"
+    }),
 
     relacao_sbg = Table.AddColumn(#"Outras Colunas Removidas", "relacao_sbg", each [relacao] & "-" & [REFERENCE], type text )
 

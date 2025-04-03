@@ -47,7 +47,7 @@ let
     relacao_sbg = Table.AddColumn(relacao, "relacao_sbg", each [relacao] & "-" & [REFERENCE], type text ),
 
     semana_texto = Table.AddColumn(relacao_sbg,"semana_texto", 
-        each "WK" & Text.Middle(Text.From([semana_num]),4,2) & "/" & Text.Middle(Text.From([semana_num]),2,2)
+        each "W" & Text.Middle(Text.From([semana_num]),4,2) & "/" & Text.Middle(Text.From([semana_num]),2,2)
     , type text),
 
     sobregasto_por_processo = Table.Group(semana_texto,{"REFERENCE"},{
@@ -83,7 +83,7 @@ let
         [ano_num] * 100 + Date.Month([Data Real de Entrega])
     ), Int32.Type),
     mes_texto = Table.AddColumn(mes_num,"mes_texto", each (
-        Date.MonthName([Data Real de Entrega]) & "/" & Text.Middle([ano_texto],2,2) 
+        Text.Start(Date.MonthName([Data Real de Entrega]),3) & "/" & Text.Middle([ano_texto],2,2) 
     ), type text),
 
     // FILTRO ÚLTIMAS 6 SEMANAS
@@ -118,7 +118,21 @@ let
     cores_agentes_de_carga = Table.ExpandTableColumn(
         Table.NestedJoin(traz_filtro_mes,"AGENTE DE CARGAS",#"11-KG-cores-ag-cargas","AGENTE DE CARGAS","dados",JoinKind.LeftOuter)
         ,"dados",{"Cor"}
-    )
+    ),
+
+    coluna_produto_split = Table.AddColumn(cores_agentes_de_carga,"insumo_split", each (
+        Text.Split(Text.Split([PART NUMBER]," "){0},"/"){0}
+    ), type text),
+
+    traz_tipo_produto = Table.ExpandTableColumn(
+        Table.NestedJoin(
+            coluna_produto_split,"insumo_split",#"97-SB1","codigo","dados",JoinKind.LeftOuter
+        ),
+        "dados",{"tipo"}
+    ),
+    insumo_equipamento = Table.TransformColumns(traz_tipo_produto,{
+        {"tipo",each if _ = "MP" or _ = "EM" then "Insumo" else "Equipamento", type text}
+    })
 
 in
-    cores_agentes_de_carga
+    insumo_equipamento
