@@ -46,9 +46,6 @@ let
     rel_perda = Table.AddColumn(ano_texto, "rel_perda", 
         each Text.From([ANO]) & "-" & Text.From([MÊS]) & "-" & Text.From([WK])
         , type text ),
-    endereço_defeito = Table.AddColumn(rel_perda,"endereço_defeito", each [ENDEREÇO] & " - " & [DESCRIÇÃO MOTIVO], type text),
-
-		
-
+    endereço_defeito = Table.AddColumn(rel_perda,"endereço_defeito", each [ENDEREÇO] & " - " & [DESCRIÇÃO MOTIVO], type text)
 in
     endereço_defeito

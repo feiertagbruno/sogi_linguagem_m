@@ -4,7 +4,7 @@ let
     #"Cabeçalhos Promovidos" = Table.PromoteHeaders(Produção_Sheet, [PromoteAllScalars=true]),
 		seleciona_colunas = Table.SelectColumns(#"Cabeçalhos Promovidos",{"Data","PRODUTO","SKU","Produção Real "}),
     #"Tipo Alterado" = Table.TransformColumnTypes(seleciona_colunas,{
-			{"Data", type date}, {"PRODUTO", type text}, {"SKU", type text}, {"Produção Real ", Int64.Type}
-    })
+			  {"Data", type date}, {"PRODUTO", type text}, {"SKU", type text}, {"Produção Real ", Int64.Type}
+		})
 in
     #"Tipo Alterado"

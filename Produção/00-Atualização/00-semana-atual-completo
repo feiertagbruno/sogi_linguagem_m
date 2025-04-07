@@ -1,0 +1,4 @@
+let
+    Fonte = Number.FromText( Text.From(Date.Year(DateTime.LocalNow())) & Text.PadStart(Text.From(Date.WeekOfYear(DateTime.LocalNow())),2,"0") )
+in
+    Fonte
